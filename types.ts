@@ -1,6 +1,12 @@
 export interface ManuscriptAnalysis {
   transcription: string;
   translation: string;
+  rawOCR: string;
+  sourceInfo: {
+    detectedSource: string;
+    section: string;
+    briefExplanation: string;
+  };
 }
 
 export interface ProcessingState {
@@ -17,4 +23,18 @@ export interface RestoredImageResult {
 export interface AnalysisResponseSchema {
   transcription: string;
   translation: string;
+  rawOCR: string;
+  sourceInfo: {
+    detectedSource: string;
+    section: string;
+    briefExplanation: string;
+  };
+}
+
+export interface ManuscriptRecord {
+  id?: number;
+  timestamp: number;
+  originalImage: string;
+  restoredImage: string | null;
+  analysis: ManuscriptAnalysis | null;
 }
