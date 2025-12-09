@@ -1,3 +1,5 @@
+export type KolamType = 'lissajous' | 'pulli' | 'kambi';
+
 export interface ManuscriptAnalysis {
   transcription: string;
   translation: string;

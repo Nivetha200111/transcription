@@ -35,7 +35,7 @@ export const fileToBase64 = (file: File): Promise<string> => {
  */
 export const restoreManuscriptImage = async (base64Image: string, mimeType: string, variation?: number): Promise<string | null> => {
   try {
-    const variationPrompt = variation ? ` Generate variation #${variation} of the restoration.` : '';
+    const variationPrompt = variation ? ` Generate variation #${variation} with slightly different enhancement parameters.` : '';
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -48,7 +48,33 @@ export const restoreManuscriptImage = async (base64Image: string, mimeType: stri
             },
           },
           {
-            text: `Restore this ancient Tamil palm-leaf manuscript. Repair cracks and physical damage. Significantly enhance the faded ink to make it sharp, black, and highly legible against the leaf texture. Reduce image noise and artifacts to ensure a clean, high-contrast, and historically accurate appearance. The goal is to make the script as readable as possible while preserving the authentic look of the palm leaf. Return only the restored image.${variationPrompt}`,
+            text: `You are a Master Digital Epigraphist and Restoration Artist specializing in ancient Tamil palm-leaf manuscripts (Olai Chuvadi).
+
+Your objective is to produce a **publication-quality restoration** of this manuscript. The output must be significantly clearer, cleaner, and more legible than the original.
+
+**Execution Guidelines:**
+
+1.  **Aggressive Text Enhancement (High Contrast)**: 
+    -   Treat the ink strokes as the primary signal and the leaf texture as background noise. 
+    -   Significantly darken and sharpen the Tamil characters to make them stand out boldly.
+    -   Connect broken strokes where ink has flaked off using the correct ductus of the script.
+
+2.  **Context-Aware Inpainting (Deep Reconstruction)**:
+    -   **CRITICAL**: Locate all holes, tears, and eroded margins.
+    -   **ACTION**: Fill these voids with matching palm-leaf texture. 
+    -   **PREDICTION**: If text is missing in a damaged area, you MUST reconstruct the missing Tamil characters based on the surrounding linguistic context. Do not leave gaps. Write the missing letters in the exact style of the original scribe.
+
+3.  **Noise & Damage Removal**:
+    -   Remove black mold spots, insect holes, water stains, and random discoloration.
+    -   Smooth out cracks so they don't look like character strokes.
+    -   Ensure the background is a uniform, clean, aged palm-leaf color, free of distracting artifacts.
+
+4.  **Authenticity Check**:
+    -   The result should look like the manuscript was preserved in pristine condition.
+    -   Do NOT introduce modern digital fonts. Use strictly hand-written stylus-etched aesthetics.
+
+Produce a result that allows a scholar to read the text effortlessly without guessing.
+            ${variationPrompt}`,
           },
         ],
       },
@@ -86,17 +112,32 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
             },
           },
           {
-            text: `Analyze this ancient Tamil palm-leaf manuscript. 
-            1. Extract the raw text characters exactly as they appear on the leaf (Raw OCR). 
-            2. Transcribe the visible ancient Tamil script into clear, modern Tamil text. 
-            3. Translate the Tamil text into English with high accuracy. Ensure the translation preserves the cultural, historical, and contextual meaning. If the text is poetic or philosophical, maintain the tone. Avoid overly literal translations that obscure the meaning; prioritize clarity and faithfulness to the source.
-            4. Identify the literary source of the text. If it is from a known Tamil literary work (e.g., Kamba Ramayanam, Thirukkural, Silappathikaram, Thevaram), specify the Work's Name, the specific Section/Verse location, and a brief explanation of the context. If the source is unknown or generic, state 'Unidentified' or 'General text'.
-            Provide the output in JSON format.`,
+            text: `You are an expert Tamil Epigraphist and Paleographer specializing in ancient palm-leaf manuscripts (Olai Chuvadi).
+            
+            Your task is to accurately decipher, transcribe, and translate the text on this manuscript.
+
+            **Analysis Steps:**
+            1. **Paleographic Examination**: Identify the script style (e.g., Archaic Tamil, Grantha, or Vatteluttu). Distinguish between the natural grain of the leaf and the etched stylus strokes.
+            2. **Raw Extraction**: Extract the characters exactly as they appear. If a character is archaic or abbreviated (common in manuscripts), denote it as closely as possible.
+            3. **Modern Transcription**: Transcribe the text into standard Modern Tamil script. 
+               - **Important**: Add missing 'pulli' (dots) for consonants if the original style omits them.
+               - Correct obvious scribal errors based on the context of the sentence.
+               - Resolve sandhi rules where necessary for readability.
+            4. **Source Identification (STRICT)**: 
+               - Cross-reference unique words, proper nouns, and poetic meters with classical Tamil literature (Sangam, Kamba Ramayanam, Periya Puranam, etc.).
+               - **DO NOT GUESS**. If the text contains only generic blessings or isolated words, return "Unidentified".
+               - Only return a specific source if you find a matching verse or distinct phrase.
+            5. **Scholarly Translation**: Translate the text into clear, academic English. 
+               - Preserve the poetic meter and tone if it is verse.
+               - Explain metaphors or cultural references in the source info context.
+
+            Output the result strictly in JSON format matching the schema provided.`,
           },
         ],
       },
       config: {
-        thinkingConfig: { thinkingBudget: 32768 }, // Enable thinking mode for complex analysis
+        thinkingConfig: { thinkingBudget: 32768 }, 
+        temperature: 0.0, // Force deterministic output to prevent varying source identification for the same image
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -118,15 +159,15 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
               properties: {
                 detectedSource: {
                   type: Type.STRING,
-                  description: "The name of the identified literary work (e.g., Kamba Ramayanam) or 'Unidentified'.",
+                  description: "The name of the identified literary work. If unknown, strictly return 'Unidentified'.",
                 },
                 section: {
                   type: Type.STRING,
-                  description: "The specific chapter, canto, or verse number (e.g., Bala Kandam, Verse 12).",
+                  description: "The specific chapter, canto, or verse number. If unknown, return empty string.",
                 },
                 briefExplanation: {
                   type: Type.STRING,
-                  description: "A short context about this specific passage or why it was identified as such.",
+                  description: "Cite the specific words or verse fragment that led to this identification. If unidentified, explain why (e.g., 'Fragmentary text').",
                 }
               },
               required: ["detectedSource", "section", "briefExplanation"],
