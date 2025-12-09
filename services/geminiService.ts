@@ -39,7 +39,7 @@ export const restoreManuscriptImage = async (base64Image: string, mimeType: stri
             },
           },
           {
-            text: 'Restore this ancient Tamil palm-leaf manuscript. Repair cracks, enhance faded ink to make it black and legible, increase contrast against the leaf background, and remove visual noise. Return only the restored image.',
+            text: 'Restore this ancient Tamil palm-leaf manuscript. Repair cracks and physical damage. Significantly enhance the faded ink to make it sharp, black, and highly legible against the leaf texture. Reduce image noise and artifacts to ensure a clean, high-contrast, and historically accurate appearance. Return only the restored image.',
           },
         ],
       },
