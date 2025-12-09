@@ -13,73 +13,66 @@ const HistoryGallery: React.FC<HistoryGalleryProps> = ({ history, onSelect, onDe
   if (history.length === 0) return null;
 
   return (
-    <div className="w-full mt-16 sm:mt-20 mb-10 animate-fade-in relative">
+    <div className="w-full mt-24 mb-16 animate-fade-in relative border-t border-royal-900/20 pt-10">
       
-      <div className="flex flex-col sm:flex-row items-center justify-center mb-8 sm:mb-10 relative gap-3 sm:gap-0">
-        <div className="hidden sm:block h-px bg-amber-900/40 w-full absolute"></div>
-        <div className="bg-[#2a1006] px-6 relative z-10 flex items-center gap-3">
-          <AnimatedKolamMotif size={24} seed={1122} color="#b45309" type={kolamType} />
-          <h3 className="text-lg sm:text-xl font-serif font-bold text-amber-500/80 tracking-widest uppercase">Archive Library</h3>
-          <span className="bg-amber-950 text-amber-600 px-3 py-1 rounded-full text-xs font-bold border border-amber-900/50">
+      <div className="flex items-center gap-4 mb-8 px-2">
+         <AnimatedKolamMotif size={28} seed={1122} color="#b45309" type={kolamType} />
+         <h3 className="text-2xl font-serif font-bold text-royal-500 tracking-tight">Archive Library</h3>
+         <span className="bg-heritage-800 text-royal-600 px-3 py-1 rounded-full text-xs font-bold border border-royal-900/30">
             {history.length}
-          </span>
-        </div>
+         </span>
       </div>
       
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {history.map((record) => (
           <div key={record.id} className="h-full">
             <AnimatedBorder seed={record.timestamp || record.id || Math.random()} type={kolamType}>
                 <div 
-                    className="group relative bg-[#1a0b05] rounded-sm shadow-lg border border-amber-900/30 hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col h-full"
+                    className="group relative bg-heritage-900 rounded-lg shadow-lg border border-royal-900/30 hover:border-royal-500/50 hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col h-full cursor-pointer"
+                    onClick={() => onSelect(record)}
                 >
                     {/* Thumbnail */}
-                    <div 
-                    className="aspect-[4/3] bg-[#0c0502] cursor-pointer relative overflow-hidden"
-                    onClick={() => onSelect(record)}
-                    >
-                    <img 
-                        src={record.originalImage} 
-                        alt="Thumbnail" 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100" 
-                        loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#2a1006]/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    
-                    {/* Overlay Indicators */}
-                    <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                        {record.restoredImage && (
-                            <span className="bg-amber-700 text-white w-5 h-5 flex items-center justify-center rounded-full text-[8px] shadow-sm border border-amber-900">R</span>
-                        )}
-                        {record.analysis && (
-                            <span className="bg-[#4a2c1d] text-white w-5 h-5 flex items-center justify-center rounded-full text-[8px] shadow-sm border border-amber-900">A</span>
-                        )}
-                    </div>
+                    <div className="aspect-[4/3] bg-heritage-950 relative overflow-hidden">
+                        <img 
+                            src={record.originalImage} 
+                            alt="Thumbnail" 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-100" 
+                            loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-heritage-900 via-transparent to-transparent opacity-60" />
+                        
+                        {/* Overlay Badges */}
+                        <div className="absolute bottom-2 right-2 flex gap-1 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                            {record.restoredImage && (
+                                <span className="bg-royal-600 text-heritage-950 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-sm">RESTORED</span>
+                            )}
+                        </div>
                     </div>
                     
                     {/* Footer */}
-                    <div className="p-3 bg-[#1a0b05] flex justify-between items-center border-t border-amber-900/50 group-hover:bg-amber-950/40 transition-colors mt-auto">
-                    <div className="flex flex-col">
-                        <span className="text-xs font-serif font-bold text-amber-700 group-hover:text-amber-500 transition-colors">
-                            {new Date(record.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
-                        <span className="text-[10px] text-amber-900/60 font-mono">
-                            {new Date(record.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </span>
+                    <div className="p-3 bg-heritage-900 flex justify-between items-center border-t border-royal-900/20 group-hover:bg-heritage-800 transition-colors mt-auto">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-serif font-bold text-parchment-200 group-hover:text-royal-400 transition-colors">
+                                {new Date(record.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                            <span className="text-[10px] text-royal-800 font-mono">
+                                {new Date(record.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                        
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (record.id) onDelete(record.id);
+                            }}
+                            className="text-royal-800 hover:text-red-400 p-2 hover:bg-red-900/10 rounded-full transition-colors"
+                            title="Delete"
+                            >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
                     </div>
-                    
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (record.id) onDelete(record.id);
-                        }}
-                        className="text-amber-900/60 hover:text-red-400 hover:bg-red-950/20 p-1.5 rounded-full transition-colors font-bold text-xs"
-                        title="Remove from archive"
-                        >
-                        ✕
-                    </button>
-                    </div>
-
                 </div>
             </AnimatedBorder>
           </div>

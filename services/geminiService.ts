@@ -48,7 +48,7 @@ export const restoreManuscriptImage = async (base64Image: string, mimeType: stri
             },
           },
           {
-            text: `You are a Master Digital Epigraphist and Restoration Artist specializing in ancient Tamil palm-leaf manuscripts (Olai Chuvadi).
+            text: `You are a Master Digital Archivist and Restoration Artist specializing in ancient Tamil palm-leaf manuscripts (Olai Chuvadi).
 
 Your objective is to produce a **publication-quality restoration** of this manuscript. The output must be significantly clearer, cleaner, and more legible than the original.
 
@@ -97,6 +97,42 @@ Produce a result that allows a scholar to read the text effortlessly without gue
 };
 
 /**
+ * Edits the manuscript image based on a user text prompt using Gemini 2.5 Flash Image.
+ */
+export const editManuscriptImage = async (base64Image: string, mimeType: string, prompt: string): Promise<string | null> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: base64Image,
+              mimeType: mimeType || 'image/jpeg',
+            },
+          },
+          {
+            text: prompt,
+          },
+        ],
+      },
+    });
+
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData && part.inlineData.data) {
+          return `data:image/png;base64,${part.inlineData.data}`;
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Error editing image:", error);
+    throw new Error("Failed to edit image.");
+  }
+};
+
+/**
  * Transcribes and translates the manuscript text using Gemini 3 Pro with Thinking Mode.
  */
 export const analyzeManuscriptText = async (base64Image: string, mimeType: string): Promise<ManuscriptAnalysis> => {
@@ -123,10 +159,11 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
                - **Important**: Add missing 'pulli' (dots) for consonants if the original style omits them.
                - Correct obvious scribal errors based on the context of the sentence.
                - Resolve sandhi rules where necessary for readability.
-            4. **Source Identification (STRICT)**: 
-               - Cross-reference unique words, proper nouns, and poetic meters with classical Tamil literature (Sangam, Kamba Ramayanam, Periya Puranam, etc.).
-               - **DO NOT GUESS**. If the text contains only generic blessings or isolated words, return "Unidentified".
-               - Only return a specific source if you find a matching verse or distinct phrase.
+            4. **Source Identification (STRICT & DETERMINISTIC)**: 
+               - Cross-reference unique words, proper nouns, and poetic meters with classical Tamil literature.
+               - **REQUIRE EXACT MATCHES**: Do not guess based on "style". Only identify the source if you can cite a specific known verse or unique phrase present in the text.
+               - If the text is fragmentary, generic, or not found in major corpora, strictly return "Unidentified".
+               - Your analysis must be deterministic: given the same text, always return the same source conclusion.
             5. **Scholarly Translation**: Translate the text into clear, academic English. 
                - Preserve the poetic meter and tone if it is verse.
                - Explain metaphors or cultural references in the source info context.
@@ -137,7 +174,8 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
       },
       config: {
         thinkingConfig: { thinkingBudget: 32768 }, 
-        temperature: 0.0, // Force deterministic output to prevent varying source identification for the same image
+        temperature: 0.0, // Force deterministic output
+        seed: 42, // Fixed seed to ensure consistent source identification for identical inputs
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,

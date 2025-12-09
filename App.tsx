@@ -3,7 +3,7 @@ import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
 import ResultsDisplay from './components/ResultsDisplay';
 import HistoryGallery from './components/HistoryGallery';
-import { restoreManuscriptImage, analyzeManuscriptText, fileToBase64 } from './services/geminiService';
+import { restoreManuscriptImage, analyzeManuscriptText, fileToBase64, editManuscriptImage } from './services/geminiService';
 import { saveManuscript, getAllManuscripts, deleteManuscript } from './services/dbService';
 import { ManuscriptAnalysis, ProcessingState, ManuscriptRecord, KolamType } from './types';
 import { AnimatedKolamMotif } from './components/AnimatedKolam';
@@ -20,7 +20,6 @@ const App: React.FC = () => {
   });
   
   const [history, setHistory] = useState<ManuscriptRecord[]>([]);
-  // Hardcoded to 'pulli' as requested by user ("it should be pulli only")
   const [kolamType] = useState<KolamType>('pulli');
 
   useEffect(() => {
@@ -70,12 +69,37 @@ const App: React.FC = () => {
         
         if (restored) {
           setRestoredImage(restored);
-        } else {
-           console.warn("Retry returned null, keeping previous image");
         }
-        
     } catch (e) {
         console.error("Retry failed", e);
+    } finally {
+        setProcessingState(prev => ({ ...prev, isRestoring: false }));
+    }
+  };
+
+  const handleEditImage = async (prompt: string) => {
+    const imageToEdit = restoredImage || originalImage;
+    if (!imageToEdit) return;
+
+    setProcessingState(prev => ({ ...prev, isRestoring: true }));
+    try {
+        const matches = imageToEdit.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+        
+        if (!matches || matches.length !== 3) {
+           throw new Error("Invalid image data");
+        }
+        
+        const mimeType = matches[1];
+        const base64Data = matches[2];
+
+        const edited = await editManuscriptImage(base64Data, mimeType, prompt);
+        
+        if (edited) {
+          setRestoredImage(edited);
+        }
+    } catch (e) {
+        console.error("Edit failed", e);
+        setProcessingState(prev => ({ ...prev, error: "Failed to edit image" }));
     } finally {
         setProcessingState(prev => ({ ...prev, isRestoring: false }));
     }
@@ -140,27 +164,27 @@ const App: React.FC = () => {
   const isLoading = processingState.isRestoring || processingState.isAnalyzing;
 
   return (
-    <div className="flex flex-col min-h-screen font-sans">
+    <div className="flex flex-col min-h-screen font-sans bg-heritage-950 text-parchment-100">
       <Header kolamType={kolamType} />
       
-      <main className="flex-grow flex flex-col items-center py-6 px-3 sm:px-6 w-full relative z-10">
-        <div className="w-full max-w-7xl">
+      <main className="flex-grow flex flex-col items-center py-6 px-4 sm:px-6 w-full relative z-10">
+        <div className="w-full max-w-[1400px]">
           
           <div className="min-h-[40vh]">
             
             {!originalImage && !isLoading ? (
-              <div className="w-full max-w-2xl mx-auto text-center space-y-10 animate-fade-in mt-4 sm:mt-8">
+              <div className="w-full max-w-3xl mx-auto text-center space-y-12 animate-fade-in mt-8">
                 
                 {/* Intro Card */}
-                <div className="bg-[#1a0b05]/60 backdrop-blur-sm border-2 border-amber-900/50 p-6 sm:p-8 rounded-sm shadow-xl relative overflow-hidden mx-2 sm:mx-0">
-                  <div className="absolute top-0 left-0 w-2 h-full bg-amber-800"></div>
-                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-amber-500 mb-3 tracking-wide">Enter the Archives</h2>
-                  <p className="text-amber-200/70 text-base sm:text-lg leading-relaxed font-serif">
+                <div className="bg-heritage-900/60 backdrop-blur-md border border-royal-900/30 p-8 rounded-xl shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-royal-600 to-royal-900"></div>
+                  <h2 className="text-3xl font-serif font-bold text-royal-400 mb-4 tracking-tight">Enter the Archives</h2>
+                  <p className="text-parchment-200/80 text-lg leading-relaxed font-serif max-w-xl mx-auto">
                     Digitally restore, transcribe, and translate ancient Tamil manuscripts using advanced AI.
                   </p>
                 </div>
 
-                <div className="px-2 sm:px-0">
+                <div className="px-4">
                   <ImageUploader 
                     onImageSelected={handleImageSelected} 
                     isLoading={false} 
@@ -171,27 +195,28 @@ const App: React.FC = () => {
             ) : null}
 
             {!originalImage && isLoading && (
-              <div className="flex flex-col items-center justify-center h-80 animate-fade-in px-4 text-center">
-                <div className="relative">
-                   {/* Use loading=true to trigger Diya animation */}
-                   <AnimatedKolamMotif size={80} seed={999} color="#f59e0b" type={kolamType} loading={true} className="mb-8" />
-                   <div className="absolute -bottom-2 w-full h-4 bg-amber-500/10 rounded-full blur-md animate-pulse"></div>
+              <div className="flex flex-col items-center justify-center h-[50vh] animate-fade-in px-4 text-center">
+                <div className="relative mb-10">
+                   <AnimatedKolamMotif size={100} seed={999} color="#d97706" type={kolamType} loading={true} />
+                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-royal-500/20 rounded-full blur-xl animate-pulse"></div>
                 </div>
-                <p className="text-2xl sm:text-3xl font-serif font-bold text-amber-500 mb-2 tracking-wide">Analyzing Script...</p>
-                <p className="text-amber-900/60 font-serif italic text-sm sm:text-base">Deciphering centuries of history</p>
+                <h3 className="text-3xl font-serif font-bold text-royal-400 mb-2 tracking-wide">Analyzing Script</h3>
+                <p className="text-royal-800/60 font-serif italic text-lg">Deciphering centuries of history...</p>
               </div>
             )}
 
             {originalImage && (
-              <div className="space-y-6 sm:space-y-8 animate-fade-in">
+              <div className="space-y-10 animate-fade-in">
                 {/* Status Bar */}
-                <div className="flex justify-between items-center bg-[#1a0b05]/80 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg border border-amber-900/50 mx-auto max-w-4xl sticky top-2 z-30 transition-all">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex justify-between items-center bg-heritage-900/90 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border border-royal-900/30 mx-auto max-w-5xl sticky top-4 z-40 transition-all hover:border-royal-500/30">
+                  <div className="flex items-center gap-4">
                      <div className="relative flex items-center justify-center pt-1">
-                       {/* Animated Flickering Diya Indicator */}
-                       <FlickeringDiya size={32} />
+                       <FlickeringDiya size={28} />
                      </div>
-                     <h3 className="font-serif font-bold text-amber-500 text-xs sm:text-sm tracking-widest uppercase">Active Session</h3>
+                     <div className="flex flex-col">
+                        <h3 className="font-serif font-bold text-royal-400 text-xs tracking-[0.2em] uppercase">Active Session</h3>
+                        <span className="text-[10px] text-royal-700 font-mono">ID: {Date.now().toString().slice(-6)}</span>
+                     </div>
                   </div>
                   <button 
                     onClick={() => {
@@ -200,16 +225,16 @@ const App: React.FC = () => {
                       setAnalysis(null);
                       setProcessingState({ isRestoring: false, isAnalyzing: false, error: null });
                     }}
-                    className="text-[10px] sm:text-xs font-bold uppercase tracking-widest bg-[#2a1006] hover:bg-amber-950 text-amber-700 hover:text-amber-500 px-4 py-2 rounded-full transition-colors flex items-center gap-2 border border-amber-900/40 hover:border-amber-700"
+                    className="text-xs font-bold uppercase tracking-widest bg-heritage-800 hover:bg-royal-900 text-royal-500 hover:text-royal-300 px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 border border-royal-900/50"
                   >
                     <span>New Upload</span>
                   </button>
                 </div>
 
                 {processingState.error && (
-                  <div className="bg-red-950/30 border-l-4 border-red-900 text-red-300 p-4 rounded-r shadow-sm flex items-center gap-3 max-w-4xl mx-auto backdrop-blur-sm">
+                  <div className="bg-red-950/20 border border-red-900/50 text-red-300 p-4 rounded-lg shadow-lg flex items-center gap-4 max-w-4xl mx-auto backdrop-blur-sm">
                     <span className="text-2xl">⚠️</span>
-                    <span className="font-serif font-medium text-sm sm:text-base">{processingState.error}</span>
+                    <span className="font-serif font-medium">{processingState.error}</span>
                   </div>
                 )}
 
@@ -218,6 +243,7 @@ const App: React.FC = () => {
                   restoredImageUrl={restoredImage}
                   analysis={analysis}
                   onRetryRestoration={handleRetryRestoration}
+                  onEditImage={handleEditImage}
                   isRestoring={processingState.isRestoring}
                   kolamType={kolamType}
                 />

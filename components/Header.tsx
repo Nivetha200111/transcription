@@ -1,5 +1,6 @@
 import React from 'react';
 import { AnimatedKolamMotif } from './AnimatedKolam';
+import { FlickeringDiya } from './FlickeringDiya';
 import { KolamType } from '../types';
 
 interface HeaderProps {
@@ -8,34 +9,33 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ kolamType }) => {
   return (
-    <header className="w-full pt-6 pb-2 px-4 text-center relative z-10">
+    <header className="w-full pt-8 pb-6 px-4 text-center relative z-10 bg-gradient-to-b from-heritage-950 to-transparent">
       <div className="max-w-4xl mx-auto flex flex-col items-center">
         
-        <div className="inline-block mb-4 relative cursor-default">
-           {/* Generative Animated Icon */}
-           <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full"></div>
-           <AnimatedKolamMotif 
+        <div className="inline-block mb-2 relative cursor-default">
+           <div className="absolute inset-0 bg-royal-500/20 blur-[40px] rounded-full opacity-60"></div>
+           <FlickeringDiya 
              size={80} 
-             seed={12345} 
-             color="#f59e0b" 
-             type={kolamType}
-             className="relative z-10 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+             className="relative z-10 drop-shadow-2xl text-[#d97706]"
            />
         </div>
         
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-amber-500 mb-2 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-          PalmLeaf Restorer
+        {/* 
+            Tamil Typography Fixes:
+            1. leading-[1.5]: Explicitly tall line-height to accommodate ascenders.
+            2. pt-6 pb-4: Significant vertical padding ensures the gradient box covers the full glyph height.
+            3. tracking-normal: Prevents ligature collision.
+        */}
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif font-extrabold tracking-normal text-transparent bg-clip-text bg-gradient-to-br from-royal-300 via-royal-500 to-royal-700 mb-1 pt-6 pb-4 drop-shadow-sm leading-[1.5] px-2">
+          தொல்நோக்கு
         </h1>
         
-        <p className="text-amber-200/70 font-serif italic text-sm sm:text-lg tracking-wide px-4 mb-4">
-          Unveiling Ancient Wisdom, Preserving Tamil Heritage
-        </p>
-
-        {/* Decorative Separator */}
-        <div className="flex items-center justify-center gap-2 sm:gap-4 mt-2 opacity-80">
-          <div className="h-px w-12 sm:w-16 bg-gradient-to-r from-transparent to-amber-600"></div>
-          <AnimatedKolamMotif size={24} seed={55} color="#d97706" type={kolamType} />
-          <div className="h-px w-12 sm:w-16 bg-gradient-to-l from-transparent to-amber-600"></div>
+        <div className="flex items-center gap-3 mb-6">
+            <span className="h-px w-8 bg-royal-800"></span>
+            <p className="text-royal-200/60 font-serif italic text-lg sm:text-xl tracking-wide">
+            Unveiling Ancient Wisdom, Preserving Tamil Heritage
+            </p>
+            <span className="h-px w-8 bg-royal-800"></span>
         </div>
       </div>
     </header>
