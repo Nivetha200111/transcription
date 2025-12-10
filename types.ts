@@ -1,5 +1,11 @@
 export type KolamType = 'lissajous' | 'pulli' | 'kambi';
 
+export interface LocationData {
+  title: string;
+  uri: string;
+  description: string;
+}
+
 export interface ManuscriptAnalysis {
   transcription: string;
   translation: string;
@@ -14,6 +20,7 @@ export interface ManuscriptAnalysis {
     confidence: string;
     reasoning: string;
   };
+  locationData?: LocationData;
 }
 
 export interface ProcessingState {

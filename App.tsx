@@ -3,7 +3,7 @@ import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
 import ResultsDisplay from './components/ResultsDisplay';
 import HistoryGallery from './components/HistoryGallery';
-import { restoreManuscriptImage, analyzeManuscriptText, fileToBase64, editManuscriptImage } from './services/geminiService';
+import { restoreManuscriptImage, analyzeManuscriptText, fileToBase64, editManuscriptImage, getMapLocation } from './services/geminiService';
 import { saveManuscript, getAllManuscripts, deleteManuscript } from './services/dbService';
 import { ManuscriptAnalysis, ProcessingState, ManuscriptRecord, KolamType } from './types';
 import { AnimatedKolamMotif } from './components/AnimatedKolam';
@@ -129,7 +129,18 @@ const App: React.FC = () => {
         });
 
       const analysisTask = analyzeManuscriptText(base64Data, file.type)
-        .then((result) => {
+        .then(async (result) => {
+           // Secondary Location Lookup
+           if (result.regionInfo?.region) {
+               try {
+                   const locationData = await getMapLocation(result.regionInfo.region);
+                   if (locationData) {
+                       result.locationData = locationData;
+                   }
+               } catch (locErr) {
+                   console.warn("Location lookup failed", locErr);
+               }
+           }
           setAnalysis(result);
           setProcessingState(prev => ({ ...prev, isAnalyzing: false }));
           return result;

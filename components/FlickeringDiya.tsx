@@ -7,7 +7,7 @@ interface FlickeringDiyaProps {
 
 export const FlickeringDiya: React.FC<FlickeringDiyaProps> = ({ size = 24, className = "" }) => {
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size }}>
+    <div className={`relative ${className} transition-transform duration-300 hover:scale-110`} style={{ width: size, height: size }}>
        <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]">
           {/* Flame Glow (Halo) */}
           <circle cx="50" cy="25" r="20" fill="#fbbf24" className="animate-pulse opacity-30 blur-md" />

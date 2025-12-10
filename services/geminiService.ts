@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { ManuscriptAnalysis } from "../types";
+import { ManuscriptAnalysis, LocationData } from "../types";
 
 // Initialize Gemini Client
 // API_KEY is guaranteed to be available via process.env.API_KEY per instructions
@@ -162,8 +162,9 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
             4. **Source Identification (STRICT & DETERMINISTIC)**: 
                - Cross-reference unique words, proper nouns, and poetic meters with classical Tamil literature.
                - **REQUIRE EXACT MATCHES**: Do not guess based on "style". Only identify the source if you can cite a specific known verse or unique phrase present in the text.
+               - **Tie-Breaking Rule**: If the text matches a specific verse found in multiple works (e.g., an original text and a later commentary), ALWAYS identify the **Original Source Work** as the 'detectedSource'.
                - If the text is fragmentary, generic, or not found in major corpora, strictly return "Unidentified".
-               - Your analysis must be deterministic: given the same text, always return the same source conclusion.
+               - Your analysis must be deterministic: given the same text input, always return the exact same source conclusion.
             5. **Region of Origin Estimation**:
                - Analyze dialect markers, specific deity references, or scribal variations to estimate the geographical origin (e.g., "Pandya Nadu", "Thanjavur", "Kongu Nadu").
                - Provide a confidence level.
@@ -247,5 +248,45 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
   } catch (error) {
     console.error("Error analyzing text:", error);
     throw new Error("Failed to analyze text. Please try again.");
+  }
+};
+
+/**
+ * Retrieves geographic location data for a given region or place name using Google Maps Grounding.
+ */
+export const getMapLocation = async (query: string): Promise<LocationData | null> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Find the exact geographic location and coordinates for: "${query}". 
+      Return a brief description of the location including coordinates.`,
+      config: {
+        tools: [{ googleMaps: {} }],
+      },
+    });
+
+    const text = response.text;
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    
+    let locationData: LocationData | null = null;
+
+    if (groundingChunks) {
+      for (const chunk of groundingChunks) {
+        if (chunk.maps && chunk.maps.uri) {
+          locationData = {
+            title: chunk.maps.title || query,
+            uri: chunk.maps.uri,
+            description: text || "Location detected via Google Maps.",
+          };
+          break; // Use the first valid map result
+        }
+      }
+    }
+    
+    return locationData;
+  } catch (error) {
+    console.error("Error getting map location:", error);
+    return null;
   }
 };
