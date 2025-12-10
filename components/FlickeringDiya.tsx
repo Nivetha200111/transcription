@@ -12,18 +12,19 @@ export const FlickeringDiya: React.FC<FlickeringDiyaProps> = ({ size = 24, class
           {/* Flame Glow (Halo) */}
           <circle cx="50" cy="25" r="20" fill="#fbbf24" className="animate-pulse opacity-30 blur-md" />
           
-          {/* Main Flame */}
+          {/* Main Flame - Slower, larger movement */}
           <path 
             d="M 50,10 Q 70,45 50,55 Q 30,45 50,10 Z" 
             fill="#f59e0b" 
             className="animate-flicker"
+            style={{ animationDuration: '0.45s' }}
           />
-          {/* Inner Flame Core */}
+          {/* Inner Flame Core - Faster, hotter jitter */}
           <path 
             d="M 50,20 Q 60,45 50,50 Q 40,45 50,20 Z" 
             fill="#fcd34d" 
             className="animate-flicker"
-            style={{ animationDelay: '0.05s', transformOrigin: 'bottom center' }}
+            style={{ animationDuration: '0.25s', animationDelay: '0.1s', transformOrigin: 'bottom center' }}
           />
           
           {/* Lamp Base (Clay Agal Vilakku shape) */}

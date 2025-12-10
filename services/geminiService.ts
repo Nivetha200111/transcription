@@ -164,7 +164,10 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
                - **REQUIRE EXACT MATCHES**: Do not guess based on "style". Only identify the source if you can cite a specific known verse or unique phrase present in the text.
                - If the text is fragmentary, generic, or not found in major corpora, strictly return "Unidentified".
                - Your analysis must be deterministic: given the same text, always return the same source conclusion.
-            5. **Scholarly Translation**: Translate the text into clear, academic English. 
+            5. **Region of Origin Estimation**:
+               - Analyze dialect markers, specific deity references, or scribal variations to estimate the geographical origin (e.g., "Pandya Nadu", "Thanjavur", "Kongu Nadu").
+               - Provide a confidence level.
+            6. **Scholarly Translation**: Translate the text into clear, academic English. 
                - Preserve the poetic meter and tone if it is verse.
                - Explain metaphors or cultural references in the source info context.
 
@@ -209,9 +212,27 @@ export const analyzeManuscriptText = async (base64Image: string, mimeType: strin
                 }
               },
               required: ["detectedSource", "section", "briefExplanation"],
+            },
+            regionInfo: {
+              type: Type.OBJECT,
+              properties: {
+                region: {
+                   type: Type.STRING,
+                   description: "The estimated geographical region of origin (e.g., 'Thanjavur Maratha Court', 'Madurai/Pandya Nadu', 'Jaffna'). Return 'Uncertain' if clues are insufficient."
+                },
+                confidence: {
+                    type: Type.STRING,
+                    description: "High, Medium, or Low"
+                },
+                reasoning: {
+                    type: Type.STRING,
+                    description: "Brief reason for the regional attribution (e.g., 'Use of specific dialect word', 'Mention of local deity')."
+                }
+              },
+              required: ["region", "confidence", "reasoning"],
             }
           },
-          required: ["rawOCR", "transcription", "translation", "sourceInfo"],
+          required: ["rawOCR", "transcription", "translation", "sourceInfo", "regionInfo"],
         },
       },
     });

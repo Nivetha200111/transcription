@@ -9,6 +9,11 @@ export interface ManuscriptAnalysis {
     section: string;
     briefExplanation: string;
   };
+  regionInfo?: {
+    region: string;
+    confidence: string;
+    reasoning: string;
+  };
 }
 
 export interface ProcessingState {
@@ -30,6 +35,11 @@ export interface AnalysisResponseSchema {
     detectedSource: string;
     section: string;
     briefExplanation: string;
+  };
+  regionInfo?: {
+    region: string;
+    confidence: string;
+    reasoning: string;
   };
 }
 
